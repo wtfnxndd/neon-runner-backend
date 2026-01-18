@@ -9,12 +9,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Health check
 app.get("/", (req, res) => {
   res.json({ message: "Neon Runner API is running ✅" });
 });
 
-// ✅ Submit Score
 app.post("/api/score", async (req, res) => {
   try {
     const { name, score, highScore, platform } = req.body;
@@ -36,7 +34,6 @@ app.post("/api/score", async (req, res) => {
   }
 });
 
-// ✅ Leaderboard Top 10
 app.get("/api/leaderboard", async (req, res) => {
   try {
     const top = await Score.find().sort({ score: -1 }).limit(10);
@@ -46,7 +43,6 @@ app.get("/api/leaderboard", async (req, res) => {
   }
 });
 
-// ✅ Connect DB and start
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
