@@ -1,54 +1,49 @@
-const express = require("express");
-const cors = require("cors");
-const mongoose = require("mongoose");
 require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
 
 const Score = require("./models/Score");
 
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
 
+// Connect to MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch(err => console.error("MongoDB Error:", err));
+
+// Root route
 app.get("/", (req, res) => {
-  res.json({ message: "Neon Runner API is running ✅" });
+  res.send("Neon Runner Backend is Running 🚀");
 });
 
+// Save score
 app.post("/api/score", async (req, res) => {
   try {
-    const { name, score, highScore, platform } = req.body;
+    const { name, score } = req.body;
 
-    if (!name || score === undefined) {
-      return res.status(400).json({ error: "Name and score required" });
-    }
+    const newScore = new Score({ name, score });
+    await newScore.save();
 
-    const newScore = await Score.create({
-      name,
-      score,
-      highScore: highScore || 0,
-      platform: platform || "web"
-    });
-
-    res.json({ message: "Score saved ✅", data: newScore });
+    res.status(201).json({ message: "Score saved!" });
   } catch (err) {
-    res.status(500).json({ error: "Server error", details: err.message });
+    res.status(500).json({ error: "Failed to save score" });
   }
 });
 
-app.get("/api/leaderboard", async (req, res) => {
+// Get leaderboard
+app.get("/api/score", async (req, res) => {
   try {
-    const top = await Score.find().sort({ score: -1 }).limit(10);
-    res.json(top);
+    const scores = await Score.find().sort({ score: -1 }).limit(10);
+    res.json(scores);
   } catch (err) {
-    res.status(500).json({ error: "Server error", details: err.message });
+    res.status(500).json({ error: "Failed to fetch scores" });
   }
 });
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB connected ✅");
-    app.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`)
-    );
-  })
-  .catch((err) => console.error("Mongo error:", err));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(Server running on port ${PORT}));
